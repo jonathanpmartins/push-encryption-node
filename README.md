@@ -1,7 +1,7 @@
 Push Encryption (node)
 ----------------------
 
-[![Travis Build Status](https://travis-ci.org/GoogleChrome/push-encryption-node.svg?branch=master)](https://travis-ci.org/GoogleChrome/push-encryption-node) [![Dependency Badge from David](https://david-dm.org/GoogleChrome/push-encryption-node.svg)](https://david-dm.org/GoogleChrome/push-encryption-node) [![devDependency Status](https://david-dm.org/GoogleChrome/push-encryption-node/dev-status.svg)](https://david-dm.org/GoogleChrome/push-encryption-node#info=devDependencies)
+[![Travis Build Status](https://travis-ci.org/GoogleChrome/web-push-encryption.svg?branch=master)](https://travis-ci.org/GoogleChrome/web-push-encryption) [![Dependency Badge from David](https://david-dm.org/GoogleChrome/web-push-encryption.svg)](https://david-dm.org/GoogleChrome/web-push-encryption) [![devDependency Status](https://david-dm.org/GoogleChrome/web-push-encryption/dev-status.svg)](https://david-dm.org/GoogleChrome/web-push-encryption#info=devDependencies)
 
 This library provides the functions necessary to encrypt a payload for sending
 with the Web Push protocol. It also includes a helper function for actually
@@ -35,25 +35,22 @@ Send a message:
 
 `webpush.sendWebPush('Yay! Web Push!', subscription);`
 
-If the push service requires an authentication header (notably Google Cloud
-Messaging, used by Chrome) then you can add that as a third parameter:
+Google Cloud Messaging (GCM), used as the push service by Chrome, requires
+authentication. You can use the `setGCMAPIKey` method to let the library know
+your API key and it will automatically send it with any GCM push requests.
 
-```
-if (subscription.endpoint.indexOf('https://android.googleapis.com/gcm/send/') === 0) {
-  webpush.sendWebPush('A message for Chrome', subscription, MY_GCM_KEY);
-}
-```
+`webpush.setGCMAPIKey(MY_GCM_KEY);`
 
 Docs
 -----
 
-You can [find docs here](https://googlechrome.github.io/push-encryption-node/).
+You can [find docs here](https://googlechrome.github.io/web-push-encryption/).
 
 Support
 -------
 
 If you've found an error in this library, please file an issue:
-https://github.com/GoogleChrome/push-encryption-node/issues
+https://github.com/GoogleChrome/web-push-encryption/issues
 
 Patches are encouraged, and may be submitted by forking this project and
 submitting a pull request through GitHub.

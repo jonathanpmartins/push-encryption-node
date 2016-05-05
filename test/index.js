@@ -38,6 +38,14 @@ const VALID_SUBSCRIPTION = {
   }
 };
 
+const INVALID_SUBSCRIPTION = {
+  endpoint: 'https://example-endpoint.com/example/6666',
+  keys: {
+    auth: '8eDyX_uCN0XRhSbY5hs7Hg==',
+    p256dh: 'BCIWgsnyXDv1VkhqL2P7YRBvdeuDnlwAPT2guNhdIoW3IP7GmHh1SMKPLxRf7x8vJy6ZFK3ol2ohgn_-0yP7QQA='
+  }
+};
+
 const INVALID_AUTH_SUBSCRIPTION = {
   endpoint: 'https://example-endpoint.com/example/1234',
   keys: {
@@ -290,7 +298,7 @@ describe('Test the Libraries Top Level API', function() {
       const library = proxyquire('../src/index.js', {
         './push': pushProxy
       });
-      return library.sendWebPush('Hello, World!', VALID_SUBSCRIPTION)
+      return library.sendWebPush(new Buffer('Hello, World!', 'utf8'), VALID_SUBSCRIPTION)
       .then(response => {
         response.statusCode.should.equal(200);
         response.statusMessage.should.equal('Status message');
@@ -330,7 +338,8 @@ describe('Test the Libraries Top Level API', function() {
       const library = proxyquire('../src/index.js', {
         './push': pushProxy
       });
-      return library.sendWebPush('Hello, World!', gcmSubscription, API_KEY)
+      library.setGCMAPIKey(API_KEY);
+      return library.sendWebPush('Hello, World!', gcmSubscription)
       .then(response => {
         response.statusCode.should.equal(200);
         response.statusMessage.should.equal('Status message');
@@ -376,6 +385,76 @@ describe('Test the Libraries Top Level API', function() {
       })
       .catch(err => {
         err.should.equal(EXAMPLE_ERROR);
+      });
+    });
+
+    it('should reject when the subscription is no longer valid (via 404 status code)', function(done) {
+      const requestReplacement = {
+        post: (endpoint, data, cb) => {
+          endpoint.should.equal(INVALID_SUBSCRIPTION.endpoint);
+
+          Buffer.isBuffer(data.body).should.equal(true);
+          data.headers.Encryption.should.have.length(27);
+          data.headers['Crypto-Key'].should.have.length(90);
+
+          cb(
+            null,
+            {
+              statusCode: 404,
+              statusMessage: 'Not Found'
+            },
+            ''
+          );
+        }
+      };
+      const pushProxy = proxyquire('../src/push.js', {
+        'request': requestReplacement
+      });
+      const library = proxyquire('../src/index.js', {
+        './push': pushProxy
+      });
+      return library.sendWebPush('Hello, World!', INVALID_SUBSCRIPTION)
+      .then(() => {
+        done(new Error('This should have rejected'));
+      })
+      .catch(err => {
+        err.code.should.equal('expired-subscription');
+        done();
+      });
+    });
+
+    it('should reject when the subscription is no longer valid (via 410 status code)', function(done) {
+      const requestReplacement = {
+        post: (endpoint, data, cb) => {
+          endpoint.should.equal(INVALID_SUBSCRIPTION.endpoint);
+
+          Buffer.isBuffer(data.body).should.equal(true);
+          data.headers.Encryption.should.have.length(27);
+          data.headers['Crypto-Key'].should.have.length(90);
+
+          cb(
+            null,
+            {
+              statusCode: 410,
+              statusMessage: 'Gone'
+            },
+            ''
+          );
+        }
+      };
+      const pushProxy = proxyquire('../src/push.js', {
+        'request': requestReplacement
+      });
+      const library = proxyquire('../src/index.js', {
+        './push': pushProxy
+      });
+      return library.sendWebPush('Hello, World!', INVALID_SUBSCRIPTION)
+      .then(() => {
+        done(new Error('This should have rejected'));
+      })
+      .catch(err => {
+        err.code.should.equal('expired-subscription');
+        done();
       });
     });
   });
